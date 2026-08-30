@@ -1,4 +1,5 @@
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import yaml
@@ -74,16 +75,29 @@ def _print_voice_info(cfg: dict, tts_mode: str):
         print(f"🎨 使用音色描述: {desc[:30]}...")
 
 
-def main():
-    print("🚀 开始执行 MIMO TTS 任务...")
-    load_dotenv()
-    api_key = os.environ.get("MIMO_API_KEY")
-    if not api_key:
-        raise ValueError("请在 .env 文件中设置 MIMO_API_KEY")
+def run_from_config(
+    cfg: dict,
+    api_key: str,
+    progress_callback: Callable[[str], None] | None = None
+) -> Path:
+    """
+    根据已解析的配置执行完整 TTS 流程。
 
-    cfg = load_config()
+    Args:
+        cfg: 已加载/构造的配置字典，结构与 config.yaml 一致。
+        api_key: MIMO API Key。
+        progress_callback: 可选回调，接收状态文本，用于前端实时显示进度。
+
+    Returns:
+        输出音频文件路径。
+    """
+    def _emit(msg: str):
+        print(msg)
+        if progress_callback:
+            progress_callback(msg)
+
     tts_mode = cfg["api"]["tts_mode"]
-    print(f"📋 当前 TTS 模式: {tts_mode}")
+    _emit(f"📋 当前 TTS 模式: {tts_mode}")
 
     # 1. 准备大文本
     input_path = Path(cfg["paths"]["input_text"])
@@ -110,8 +124,9 @@ def main():
 
     # 5. 遍历请求大文本的每一个分片
     generated_audio_chunks: list[bytes] = []
+    total = len(chunks)
     for i, chunk in enumerate(chunks, 1):
-        print(f"⏳ 正在合成第 {i}/{len(chunks)} 片段...")
+        _emit(f"⏳ 正在合成第 {i}/{total} 片段...")
         try:
             audio_bytes = tts.synthesize(
                 text_chunk=chunk,
@@ -121,12 +136,24 @@ def main():
             )
             generated_audio_chunks.append(audio_bytes)
         except Exception as e:
-            print(f"❌ 第 {i} 片段合成失败: {e}")
+            _emit(f"❌ 第 {i} 片段合成失败: {e}")
             raise
 
     # 6. 音频无缝拼接保存
     output_path = Path(cfg["paths"]["output_audio"])
     concatenate_and_save_audio(generated_audio_chunks, output_path)
+    return output_path
+
+
+def main():
+    print("🚀 开始执行 MIMO TTS 任务...")
+    load_dotenv()
+    api_key = os.environ.get("MIMO_API_KEY")
+    if not api_key:
+        raise ValueError("请在 .env 文件中设置 MIMO_API_KEY")
+
+    cfg = load_config()
+    run_from_config(cfg, api_key)
 
 
 if __name__ == "__main__":

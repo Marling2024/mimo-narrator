@@ -20,6 +20,11 @@ outputs/
 *.wav
 *.mp3
 
+# Web UI runtime files
+inputs/web_input.txt
+web_ui.log
+gradio_cache/
+
 # IDE
 .vscode/
 .idea/

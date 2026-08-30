@@ -4,5 +4,8 @@ PyYAML>=6.0.1
 python-dotenv>=1.0.1
 tenacity>=8.2.3
 
+# Web UI frontend
+gradio>=5.0.0
+
 # Dev / test
 pytest>=8.0.0
