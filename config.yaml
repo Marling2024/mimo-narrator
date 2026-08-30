@@ -1,0 +1,35 @@
+api:
+  # 如果使用Token Plan，请替换为 https:[redacted]
+  base_url: "https://api.xiaomimimo.com/v1"
+  # TTS 模式：preset（预置音色）/ voice_design（音色设计）/ voice_clone（音色克隆）
+  # 切换模式后，主流程会自动选用对应模型和 voice 参数，无需改动代码
+  tts_mode: "voice_clone"
+
+tts_params:
+  format: "wav"
+  enable_split: true              # 是否对输入文本按标点切分；设为 false 则整段提交合成
+  max_chars_per_chunk: 150       # 每个分片的最大字符数，确保API响应最快（enable_split=false 时忽略）
+  style_instruction: "明亮清甜的“微笑音”，语速偏快且咬字干脆，句尾轻盈俏皮地上扬，遇到专业术语时做体贴的重音与停顿，一个知性温柔又古灵精怪的技术萌妹。" # （可选）控制风格
+
+# ── 预置音色模式（tts_mode=preset 时生效）────────────────────────────
+preset:
+  # 预置音色名，参考 MIMO 官方音色列表，如 "冰糖"、"温柔女声" 等
+  voice_name: "冰糖"
+
+# ── 音色设计模式（tts_mode=voice_design 时生效）─────────────────────
+voice_design:
+  # 用自然语言描述想要的音色，模型会根据描述自动生成
+  voice_description: "一位二十多岁的年轻女性，声线清脆甜美，元气满满。发声位置靠前，吐字轻快明朗，语调始终保持着上扬的笑意，充满亲和力十足的职业精神。"
+  # 是否让模型智能润色目标播报文本后再合成（MIMO 官方推荐开启）
+  optimize_text_preview: true
+
+# ── 音色克隆模式（tts_mode=voice_clone 时生效）─────────────────────
+voice_clone:
+  # 参考音频路径在 paths.reference_audio 中配置
+  # 音频大小不超过 10MB，支持 wav 或 mp3 格式
+  pass
+
+paths:
+  input_text: "inputs/large_text.txt"
+  reference_audio: "inputs/reference.wav" # 大小不能超过10MB，wav或mp3格式
+  output_audio: "outputs/final_output.wav"
