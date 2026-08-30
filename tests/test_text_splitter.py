@@ -42,11 +42,13 @@ def test_split_at_limit():
 
 
 def test_single_sentence_too_long():
-    """单句超长时强制截断"""
+    """单句超长时按 max_length 切分为多个片段，避免丢失内容"""
     long_sentence = "A" * 100 + "。"
     result = split_text_by_punctuation(long_sentence, max_length=50)
-    assert len(result) == 1
+    assert len(result) == 3
     assert len(result[0]) == 50
+    assert len(result[1]) == 50
+    assert len(result[2]) == 1
 
 
 def test_mixed_punctuation():
@@ -72,6 +74,14 @@ def test_preserve_punctuation():
     assert result[0].endswith("。")
 
 
+def test_long_sentence_no_content_loss():
+    """超长句按字符切分后，拼接结果应与原句一致"""
+    long_sentence = "A" * 100 + "。"
+    result = split_text_by_punctuation(long_sentence, max_length=30)
+    assert "".join(result) == long_sentence
+    assert all(len(chunk) <= 30 for chunk in result)
+
+
 if __name__ == "__main__":
     test_empty_text()
     test_single_sentence()
@@ -81,4 +91,5 @@ if __name__ == "__main__":
     test_mixed_punctuation()
     test_whitespace_only_sentences()
     test_preserve_punctuation()
+    test_long_sentence_no_content_loss()
     print("✅ 所有 text_splitter 测试通过")
