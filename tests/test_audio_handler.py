@@ -7,11 +7,11 @@
   - 文件不存在异常
   - 空列表处理
 """
-import sys
 import os
 import io
 import tempfile
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest
 
 from pydub import AudioSegment
 from utils.audio_handler import encode_audio_to_base64, concatenate_and_save_audio
@@ -52,11 +52,8 @@ def test_encode_audio_to_base64_truncation():
 
 def test_encode_file_not_found():
     """文件不存在时抛 FileNotFoundError"""
-    try:
+    with pytest.raises(FileNotFoundError):
         encode_audio_to_base64("nonexistent.wav")
-        assert False, "应该抛出异常"
-    except FileNotFoundError:
-        pass
 
 
 def test_concatenate_and_save():

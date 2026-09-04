@@ -7,10 +7,6 @@
   - 单句超长
   - 边界值
 """
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from utils.text_splitter import split_text_by_punctuation
 
 

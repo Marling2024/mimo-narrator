@@ -9,11 +9,10 @@
   - synthesize mock 测试（preset / voice_clone）
   - voice_design 的 optimize_text 控制
 """
-import sys
-import os
 import base64
 from unittest.mock import patch, MagicMock
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pytest
 
 from utils.api_client import MimoTTS, _MODEL_MAP
 
@@ -42,11 +41,8 @@ def test_constructor_voice_clone():
 
 
 def test_constructor_invalid_mode():
-    try:
+    with pytest.raises(ValueError):
         MimoTTS(api_key="fk", base_url="https://x", tts_mode="invalid")
-        assert False, "应抛异常"
-    except ValueError:
-        pass
 
 
 # ── _build_messages ───────────────────────────────────────
@@ -197,11 +193,8 @@ def test_synthesize_no_audio_raises_immediately(mock_openai):
     mock_openai.return_value = mock_client
 
     tts = MimoTTS(api_key="fk", base_url="https://x", tts_mode="preset")
-    try:
+    with pytest.raises(ValueError, match="未返回音频"):
         tts.synthesize("你好。", "", "冰糖")
-        assert False, "应抛出 ValueError"
-    except ValueError as e:
-        assert "未返回音频" in str(e)
     assert mock_client.chat.completions.create.call_count == 1
 
 
@@ -217,11 +210,8 @@ def test_auth_error_not_retried(mock_openai):
     mock_openai.return_value = mock_client
 
     tts = MimoTTS(api_key="fk", base_url="https://x", tts_mode="preset")
-    try:
+    with pytest.raises(AuthenticationError):
         tts.synthesize("你好。", "", "冰糖")
-        assert False, "应抛出 AuthenticationError"
-    except AuthenticationError:
-        pass
     assert mock_client.chat.completions.create.call_count == 1
 
 

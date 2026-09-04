@@ -7,12 +7,10 @@
   - 缺少必要配置时抛异常
   - load_config 正确性
 """
-import sys
 import os
 import tempfile
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import yaml
+import pytest
 from main import _resolve_voice_param, load_config
 
 
@@ -32,11 +30,8 @@ def test_resolve_preset_missing_name():
         "api": {"tts_mode": "preset"},
         "preset": {},
     }
-    try:
+    with pytest.raises(ValueError):
         _resolve_voice_param(cfg)
-        assert False, "应该抛出异常"
-    except ValueError:
-        pass
 
 
 def test_resolve_voice_design():
@@ -55,11 +50,8 @@ def test_resolve_voice_design_missing_desc():
         "api": {"tts_mode": "voice_design"},
         "voice_design": {},
     }
-    try:
+    with pytest.raises(ValueError):
         _resolve_voice_param(cfg)
-        assert False, "应该抛出异常"
-    except ValueError:
-        pass
 
 
 def test_resolve_voice_clone():
@@ -88,11 +80,8 @@ def test_resolve_voice_clone():
 def test_resolve_invalid_mode():
     """无效模式应抛 ValueError"""
     cfg = {"api": {"tts_mode": "invalid"}}
-    try:
+    with pytest.raises(ValueError):
         _resolve_voice_param(cfg)
-        assert False, "应该抛出异常"
-    except ValueError:
-        pass
 
 
 def test_load_config():
@@ -165,13 +154,10 @@ def test_run_from_config_empty_text():
         "paths": {"input_text": tmp.name},
     }
     try:
-        run_from_config(cfg, api_key="fk")
-        assert False, "应抛出 ValueError"
-    except ValueError as e:
-        assert "为空" in str(e)
+        with pytest.raises(ValueError, match="为空"):
+            run_from_config(cfg, api_key="fk")
     finally:
         os.unlink(tmp.name)
-
 
 def test_resolve_path_cwd_independent():
     """相对路径应锚定项目根目录，与当前工作目录无关"""
