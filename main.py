@@ -10,7 +10,14 @@ from utils.audio_handler import encode_audio_to_base64, concatenate_and_save_aud
 from utils.api_client import MimoTTS
 
 
-CONFIG_PATH = Path("config.yaml")
+PROJECT_ROOT = Path(__file__).parent
+CONFIG_PATH = PROJECT_ROOT / "config.yaml"
+
+
+def _resolve_path(p: str | Path) -> Path:
+    """相对路径一律以项目根目录（main.py 所在目录）为锚点，与工作目录无关。"""
+    path = Path(p)
+    return path if path.is_absolute() else PROJECT_ROOT / path
 
 
 def load_config(config_path: str | Path = CONFIG_PATH) -> dict:
@@ -43,7 +50,7 @@ def _resolve_voice_param(cfg: dict) -> str:
         return voice_desc
 
     if tts_mode == "voice_clone":
-        ref_path = cfg["paths"]["reference_audio"]
+        ref_path = _resolve_path(cfg["paths"]["reference_audio"])
         return encode_audio_to_base64(ref_path)
 
     raise ValueError(f"不支持的 TTS 模式: {tts_mode}")
@@ -101,7 +108,7 @@ def run_from_config(
     _emit(f"📋 当前 TTS 模式: {tts_mode}")
 
     # 1. 准备大文本
-    input_path = Path(cfg["paths"]["input_text"])
+    input_path = _resolve_path(cfg["paths"]["input_text"])
     large_text = input_path.read_text(encoding="utf-8")
 
     # 2. 切分或整段
@@ -144,7 +151,7 @@ def run_from_config(
             raise
 
     # 6. 音频无缝拼接保存
-    output_path = Path(cfg["paths"]["output_audio"])
+    output_path = _resolve_path(cfg["paths"]["output_audio"])
     concatenate_and_save_audio(generated_audio_chunks, output_path)
     return output_path
 

@@ -173,6 +173,23 @@ def test_run_from_config_empty_text():
         os.unlink(tmp.name)
 
 
+def test_resolve_path_cwd_independent():
+    """相对路径应锚定项目根目录，与当前工作目录无关"""
+    from pathlib import Path
+    from main import _resolve_path, PROJECT_ROOT
+
+    old_cwd = os.getcwd()
+    os.chdir(tempfile.gettempdir())
+    try:
+        resolved = _resolve_path("inputs/a.txt")
+        assert resolved.is_absolute()
+        assert resolved == PROJECT_ROOT / "inputs" / "a.txt"
+        # 绝对路径原样返回
+        assert _resolve_path(Path(old_cwd)) == Path(old_cwd)
+    finally:
+        os.chdir(old_cwd)
+
+
 if __name__ == "__main__":
     test_resolve_preset()
     test_resolve_preset_missing_name()
@@ -185,4 +202,5 @@ if __name__ == "__main__":
     test_enable_split_true()
     test_enable_split_false()
     test_run_from_config_empty_text()
+    test_resolve_path_cwd_independent()
     print("✅ 所有 main 辅助函数测试通过")

@@ -19,8 +19,9 @@ from dotenv import load_dotenv
 
 from main import load_config, run_from_config
 
-INPUT_FILE = Path("inputs/web_input.txt")
-OUTPUT_FILE = Path("outputs/web_output.wav")
+PROJECT_ROOT = Path(__file__).parent
+INPUT_FILE = PROJECT_ROOT / "inputs" / "web_input.txt"
+OUTPUT_FILE = PROJECT_ROOT / "outputs" / "web_output.wav"
 
 
 def _load_api_key() -> str:
@@ -32,7 +33,7 @@ def _load_api_key() -> str:
 
 
 def _load_default_text() -> str:
-    default_path = Path("inputs/large_text.txt")
+    default_path = PROJECT_ROOT / "inputs" / "large_text.txt"
     if default_path.exists():
         return default_path.read_text(encoding="utf-8")
     return ""
