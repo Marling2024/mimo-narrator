@@ -1,4 +1,4 @@
-# MIMO TTS
+# mimo-narrator
 
 基于小米 MiMo TTS API 的大文本语音合成工具：自动将长文本按标点切分、逐片合成并无缝拼接为完整音频。支持命令行和 Gradio Web UI 两种使用方式。
 
