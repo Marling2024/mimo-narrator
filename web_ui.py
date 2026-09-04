@@ -127,26 +127,10 @@ def _synthesize(
 
     progress(0.1, desc="初始化 TTS 客户端")
 
-    # 计算切分数量，用于更精细的进度
-    from utils.text_splitter import split_text_by_punctuation
-    chunks = split_text_by_punctuation(text, max_length=max_chars) if enable_split else [text]
-    total = len(chunks)
-    status_lines.append(f"📝 文本已切分为 {total} 个片段")
-    yield "\n".join(status_lines), None
-
-    completed = 0
-
-    def on_progress(msg: str):
-        nonlocal completed
-        # 简单解析合成进度：遇到 "正在合成第 X/Y" 时更新
-        if "正在合成第" in msg:
-            try:
-                parts = msg.split("/")
-                current = int(parts[0].split("第")[-1])
-                completed = current
-                progress(0.2 + 0.7 * (current / total), desc=f"合成第 {current}/{total} 片段")
-            except Exception:
-                pass
+    def on_progress(msg: str, current: int | None = None, total: int | None = None):
+        # run_from_config 通过结构化回调传入分片进度，无需解析文案
+        if current is not None and total:
+            progress(0.2 + 0.7 * (current / total), desc=f"合成第 {current}/{total} 片段")
         status_lines.append(msg)
 
     try:

@@ -78,7 +78,7 @@ def _print_voice_info(cfg: dict, tts_mode: str):
 def run_from_config(
     cfg: dict,
     api_key: str,
-    progress_callback: Callable[[str], None] | None = None
+    progress_callback: Callable[[str, int | None, int | None], None] | None = None
 ) -> Path:
     """
     根据已解析的配置执行完整 TTS 流程。
@@ -86,15 +86,16 @@ def run_from_config(
     Args:
         cfg: 已加载/构造的配置字典，结构与 config.yaml 一致。
         api_key: MIMO API Key。
-        progress_callback: 可选回调，接收状态文本，用于前端实时显示进度。
+        progress_callback: 可选回调，签名为 (msg, current, total)；
+            msg 为状态文本，current/total 为分片进度（非分片事件时为 None）。
 
     Returns:
         输出音频文件路径。
     """
-    def _emit(msg: str):
+    def _emit(msg: str, current: int | None = None, total: int | None = None):
         print(msg)
         if progress_callback:
-            progress_callback(msg)
+            progress_callback(msg, current, total)
 
     tts_mode = cfg["api"]["tts_mode"]
     _emit(f"📋 当前 TTS 模式: {tts_mode}")
@@ -129,7 +130,7 @@ def run_from_config(
     generated_audio_chunks: list[bytes] = []
     total = len(chunks)
     for i, chunk in enumerate(chunks, 1):
-        _emit(f"⏳ 正在合成第 {i}/{total} 片段...")
+        _emit(f"⏳ 正在合成第 {i}/{total} 片段...", current=i, total=total)
         try:
             audio_bytes = tts.synthesize(
                 text_chunk=chunk,
