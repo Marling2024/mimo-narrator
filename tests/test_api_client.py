@@ -185,6 +185,46 @@ def test_synthesize_voice_clone(mock_openai):
     assert call_args["audio"]["voice"] == voice_uri
 
 
+# ── synthesize 错误处理 ─────────────────────────────────────
+@patch("utils.api_client.OpenAI")
+def test_synthesize_no_audio_raises_immediately(mock_openai):
+    """API 未返回音频时应抛 ValueError，且不触发重试"""
+    mock_client = MagicMock()
+    mock_choice = MagicMock()
+    mock_choice.message.audio = None
+    mock_choice.message.content = "抱歉"
+    mock_client.chat.completions.create.return_value.choices = [mock_choice]
+    mock_openai.return_value = mock_client
+
+    tts = MimoTTS(api_key="fk", base_url="https://x", tts_mode="preset")
+    try:
+        tts.synthesize("你好。", "", "冰糖")
+        assert False, "应抛出 ValueError"
+    except ValueError as e:
+        assert "未返回音频" in str(e)
+    assert mock_client.chat.completions.create.call_count == 1
+
+
+@patch("utils.api_client.OpenAI")
+def test_auth_error_not_retried(mock_openai):
+    """鉴权失败等确定性错误不应重试，只调用一次"""
+    from openai import AuthenticationError
+
+    mock_client = MagicMock()
+    mock_client.chat.completions.create.side_effect = AuthenticationError(
+        "bad key", response=MagicMock(), body=None
+    )
+    mock_openai.return_value = mock_client
+
+    tts = MimoTTS(api_key="fk", base_url="https://x", tts_mode="preset")
+    try:
+        tts.synthesize("你好。", "", "冰糖")
+        assert False, "应抛出 AuthenticationError"
+    except AuthenticationError:
+        pass
+    assert mock_client.chat.completions.create.call_count == 1
+
+
 if __name__ == "__main__":
     test_model_map()
     test_constructor_preset()
@@ -203,4 +243,6 @@ if __name__ == "__main__":
     test_synthesize_preset()
     test_synthesize_voice_design_no_voice_field()
     test_synthesize_voice_clone()
+    test_synthesize_no_audio_raises_immediately()
+    test_auth_error_not_retried()
     print("✅ 所有 api_client 测试通过")

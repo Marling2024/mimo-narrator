@@ -1,6 +1,11 @@
 import base64
-from openai import OpenAI
-from tenacity import retry, stop_after_attempt, wait_exponential
+from openai import APIConnectionError, InternalServerError, OpenAI, RateLimitError
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 # 三种 TTS 模式各自对应不同的模型端点，
 # 集中管理映射关系，避免散落在多处硬编码
@@ -69,7 +74,12 @@ class MimoTTS:
 
         return params
 
+    # 只重试瞬时错误（网络/限流/服务端 5xx）；鉴权失败、参数错误、解析失败立即抛出，
+    # 否则确定性错误会白等 6 次指数退避（约 2 分钟）才报错
     @retry(
+        retry=retry_if_exception_type(
+            (APIConnectionError, RateLimitError, InternalServerError)
+        ),
         stop=stop_after_attempt(6),
         wait=wait_exponential(multiplier=2, min=4, max=40),
         reraise=True  # 耗尽重试次数后抛出原始异常，便于排查
@@ -98,5 +108,10 @@ class MimoTTS:
             audio=audio_params
         )
 
-        audio_b64_str = completion.choices[0].message.audio.data
-        return base64.b64decode(audio_b64_str)
+        message = completion.choices[0].message
+        if message.audio is None or not message.audio.data:
+            raise ValueError(
+                "API 未返回音频数据（可能是文本为空或触发内容审查），"
+                f"返回内容: {message.content!r}"
+            )
+        return base64.b64decode(message.audio.data)
