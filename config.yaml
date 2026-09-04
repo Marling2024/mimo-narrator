@@ -24,10 +24,8 @@ voice_design:
   optimize_text_preview: true
 
 # ── 音色克隆模式（tts_mode=voice_clone 时生效）─────────────────────
-voice_clone:
-  # 参考音频路径在 paths.reference_audio 中配置
-  # 音频大小不超过 10MB，支持 wav 或 mp3 格式
-  pass
+# 无独立配置项：参考音频路径在 paths.reference_audio 中配置
+# 音频大小不超过 10MB，支持 wav 或 mp3 格式
 
 paths:
   input_text: "inputs/large_text.txt"
