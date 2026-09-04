@@ -105,6 +105,9 @@ def run_from_config(
 
     # 2. 切分或整段
     chunks = _prepare_chunks(cfg, large_text)
+    if not chunks:
+        # 空文本若继续走完流程，会"成功"返回一个从未写出的音频文件
+        raise ValueError(f"输入文本为空，无法合成: {input_path}")
 
     # 3. 根据模式解析 voice 参数
     voice_param = _resolve_voice_param(cfg)

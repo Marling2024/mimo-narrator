@@ -150,6 +150,29 @@ def test_enable_split_false():
     assert chunks[0] == text
 
 
+def test_run_from_config_empty_text():
+    """空输入文本应立即抛 ValueError，而不是假成功"""
+    from main import run_from_config
+
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False, encoding="utf-8"
+    )
+    tmp.close()
+    cfg = {
+        "api": {"tts_mode": "preset", "base_url": "https://x"},
+        "tts_params": {"enable_split": True, "max_chars_per_chunk": 100},
+        "preset": {"voice_name": "冰糖"},
+        "paths": {"input_text": tmp.name},
+    }
+    try:
+        run_from_config(cfg, api_key="fk")
+        assert False, "应抛出 ValueError"
+    except ValueError as e:
+        assert "为空" in str(e)
+    finally:
+        os.unlink(tmp.name)
+
+
 if __name__ == "__main__":
     test_resolve_preset()
     test_resolve_preset_missing_name()
@@ -161,4 +184,5 @@ if __name__ == "__main__":
     test_enable_split_default()
     test_enable_split_true()
     test_enable_split_false()
+    test_run_from_config_empty_text()
     print("✅ 所有 main 辅助函数测试通过")
