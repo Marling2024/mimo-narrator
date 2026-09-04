@@ -148,73 +148,73 @@ def _synthesize(
 
 def build_ui() -> gr.Blocks:
     with gr.Blocks(title="MIMO TTS", css=".container { max-width: 720px; margin: 0 auto; }") as demo:
-        gr.Markdown("# MIMO TTS \u00b7 \u6781\u7b80\u63a7\u5236\u53f0")
+        gr.Markdown("# MIMO TTS · 极简控制台")
 
         with gr.Row():
             mode = gr.Dropdown(
-                choices=[("\u9884\u7f6e\u97f3\u8272", "preset"), ("\u97f3\u8272\u8bbe\u8ba1", "voice_design"), ("\u97f3\u8272\u514b\u9686", "voice_clone")],
+                choices=[("预置音色", "preset"), ("音色设计", "voice_design"), ("音色克隆", "voice_clone")],
                 value="preset",
-                label="\u5408\u6210\u6a21\u5f0f",
+                label="合成模式",
             )
 
-        # \u52a8\u6001\u53c2\u6570\u533a
+        # 动态参数区
         with gr.Column():
             preset_voice = gr.Textbox(
-                label="\u9884\u7f6e\u97f3\u8272\u540d\u79f0",
-                value="\u51b0\u7cd6",
+                label="预置音色名称",
+                value="冰糖",
                 visible=True,
             )
             voice_desc = gr.Textbox(
-                label="\u97f3\u8272\u63cf\u8ff0",
-                placeholder="\u7528\u4e00\u6bb5\u8bdd\u63cf\u8ff0\u4f60\u60f3\u8981\u7684\u97f3\u8272...",
+                label="音色描述",
+                placeholder="用一段话描述你想要的音色...",
                 lines=3,
                 visible=False,
             )
             optimize_text = gr.Checkbox(
-                label="\u542f\u7528\u667a\u80fd\u6da6\u8272",
+                label="启用智能润色",
                 value=True,
                 visible=False,
             )
             reference_audio = gr.Audio(
-                label="\u53c2\u8003\u97f3\u9891",
+                label="参考音频",
                 type="filepath",
                 visible=False,
             )
 
         text_input = gr.Textbox(
-            label="\u8f93\u5165\u6587\u672c",
+            label="输入文本",
             value=_load_default_text(),
             lines=8,
-            placeholder="\u5728\u6b64\u8f93\u5165\u6216\u7f16\u8f91\u9700\u8981\u5408\u6210\u7684\u6587\u672c...",
+            placeholder="在此输入或编辑需要合成的文本...",
         )
 
         style_input = gr.Textbox(
-            label="\u98ce\u683c\u6307\u4ee4\uff08\u53ef\u9009\uff09",
-            placeholder="\u4f8b\u5982\uff1a\u660e\u4eae\u6e05\u751c\u7684\u5fae\u7b11\u97f3...",
+            label="风格指令（可选）",
+            placeholder="例如：明亮清甜的微笑音...",
             lines=2,
         )
 
         with gr.Row():
-            enable_split = gr.Checkbox(label="\u6309\u6807\u70b9\u5207\u5206\u6587\u672c", value=True)
-            max_chars = gr.Slider(label="\u6bcf\u7247\u6700\u5927\u5b57\u7b26\u6570", minimum=50, maximum=500, step=10, value=150)
+            enable_split = gr.Checkbox(label="按标点切分文本", value=True)
+            max_chars = gr.Slider(label="每片最大字符数", minimum=50, maximum=500, step=10, value=150)
 
         output_path = gr.Textbox(
-            label="\u8f93\u51fa\u97f3\u9891\u8def\u5f84",
+            label="输出音频路径",
             value=str(OUTPUT_FILE),
         )
 
-        submit_btn = gr.Button("\u25b6 \u5f00\u59cb\u5408\u6210", variant="primary")
+        submit_btn = gr.Button("▶ 开始合成", variant="primary")
 
         status_box = gr.Textbox(
-            label="\u72b6\u6001",
-            value="\u51c6\u5907\u5c31\u7eea",
+            label="状态",
+            value="准备就绪",
             lines=6,
             interactive=False,
         )
 
-        output_audio = gr.Audio(label="\u8f93\u51fa\u97f3\u9891", type="filepath")
+        output_audio = gr.Audio(label="输出音频", type="filepath")
 
-        # \u4ea4\u4e92\u903b辑
+        # 交互逻辑
         mode.change(
             fn=_toggle_mode,
             inputs=mode,
